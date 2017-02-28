@@ -1,0 +1,113 @@
+---
+title: "Cinci-Dayton RUG Meetup"
+author: "Eugene Pyatigorsky"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_notebook: 
+    highlight: tango
+    theme: cosmo
+---
+------
+
+## Installation & Connection
+`sparklyr` and `dplyr` is what we'll be using. Install Spark directly from R with the handy `spark_install()` function within `sparklyr`
+```{r}
+library(dplyr)
+library(data.table)
+library(sparklyr)
+# spark_install(version = "1.6.2")
+config <- spark_config()
+config$sparklyr.gateway.port <-  5454
+sc <- spark_connect(master = "local", config = config)
+sc
+src_tbls(sc)
+```
+
+## Importing Data
+We need to feed data into the Spark cluster, whether by copying it from R objects or by using one of the filereader functions.  
+
+#### copy_to
+```{r}
+system.time({
+    ship <- fread("data/cfs_2012_pumf_csv.txt")
+    ship_sp <- copy_to(sc, ship, "ship", overwrite = T)
+})
+src_tbls(sc)
+
+```
+  
+  
+#### spark_read_csv
+```{r}
+system.time(
+    ship2_sp <- spark_read_csv(sc, "ship2", 
+                           "data/cfs_2012_pumf_csv.txt")
+)
+```
+
+We can't use `names` to figure out what's in the spark tables,
+but `colnames` and `tbl_vars` work
+```{r}
+colnames(ship_sp)
+tbl_vars(ship2_sp)
+```
+
+
+## Manipulating Data with dplyr
+
+You can use **some** (all?) of the dplyr verbs and also SQL commands directly on spark tables. That's basically the whole point.
+
+```{r}
+ship_sp %>% count(ORIG_STATE)
+```
+
+Spark will defer calculation until you deliberately or implictely try to `collect` the data back as an R object. 
+
+```{r}
+head(ship_sp)
+spark_log(sc, n = 3)
+```
+
+For example, we select some columns of interest and assign the resulting df to a new variables. However, as we see by calling `names` or `str` on the resulting variable, it's still a spark object, not a **collected** df.
+```{r}
+ship_values <- ship_sp %>% 
+    select(contains("SHIPMT"))
+
+names(ship_values)
+```
+
+## Machine Learning
+
+The `sparklyr` API includes interfaces to way more `Spark ML` facilities than the previous API from Spark directly.
+
+### Regression Example
+
+Let's try running a simple linear regression of shipment values of some other numeric variables
+
+```{r}
+head(ship_values)
+```
+
+```{r}
+lm_sp <- ship_values %>% 
+    select(-SHIPMT_ID) %>% 
+    ml_linear_regression(SHIPMT_VALUE ~ .)
+
+dat <- ship %>% 
+    select(contains("SHIPMT")) %>% 
+    select(-SHIPMT_ID)
+
+lm_R <- lm(SHIPMT_VALUE ~ ., data = dat)
+    
+```
+```{r}
+class(lm_sp)
+class(lm_R)
+```
+
+
+```{r}
+summary(lm_sp)
+summary(lm_R)
+```
+
