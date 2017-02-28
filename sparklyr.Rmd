@@ -9,6 +9,16 @@ output:
 ---
 ------
 
+This notebook is available on:
+https://github.com/epspi/02.28.2017_Cin-Day_RUG_sparklyr
+
+The data is available at census.gov:
+https://www.census.gov/econ/cfs/pums.html
+
+A fully instructive tutorial is at:
+http://spark.rstudio.com/
+
+
 ## Installation & Connection
 `sparklyr` and `dplyr` is what we'll be using. Install Spark directly from R with the handy `spark_install()` function within `sparklyr`
 ```{r}
