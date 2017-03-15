@@ -2,3 +2,7 @@
 *.txt
 
 *.log
+
+log4j.spark.log.2017-03-03
+
+log4j.spark.log.2017-02-28

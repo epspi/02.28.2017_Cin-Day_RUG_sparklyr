@@ -6,8 +6,12 @@ output:
   html_notebook: 
     highlight: tango
     theme: cosmo
+    toc: yes
+    toc_depth: 2
 ---
 ------
+
+
 
 This notebook is available on:
 https://github.com/epspi/02.28.2017_Cin-Day_RUG_sparklyr
@@ -19,19 +23,38 @@ A fully instructive tutorial is at:
 http://spark.rstudio.com/
 
 
+
+
 ## Installation & Connection
 `sparklyr` and `dplyr` is what we'll be using. Install Spark directly from R with the handy `spark_install()` function within `sparklyr`
-```{r}
+```{r Setup}
+if (!require(dplyr)) install.packages("dplyr")
+if (!require(data.table)) install.packages("data.table")
+if (!require(sparklyr)) install.packages("sparklyr")
+
 library(dplyr)
 library(data.table)
 library(sparklyr)
-# spark_install(version = "1.6.2")
-config <- spark_config()
-config$sparklyr.gateway.port <-  5454
-sc <- spark_connect(master = "local", config = config)
+
+spark_install(version = "1.6.2")
+```
+
+
+
+
+```{r Connection}
+sc <- spark_connect(master = "local")
+
+# If you have port conflicts, try:
+# config <- spark_config()
+# config$sparklyr.gateway.port <-  5454
+# sc <- spark_connect(master = "local", config = config)
+
 sc
 src_tbls(sc)
+spark_web(sc)
 ```
+
 
 ## Importing Data
 We need to feed data into the Spark cluster, whether by copying it from R objects or by using one of the filereader functions.  
@@ -62,6 +85,10 @@ colnames(ship_sp)
 tbl_vars(ship2_sp)
 ```
 
+The RStudio table viewer also works on Spark tables
+```{r}
+head(ship2_sp) %>% View
+```
 
 ## Manipulating Data with dplyr
 
@@ -85,6 +112,9 @@ ship_values <- ship_sp %>%
 
 names(ship_values)
 ```
+```{r}
+ship_values %>% head
+```
 
 ## Machine Learning
 
@@ -99,15 +129,19 @@ head(ship_values)
 ```
 
 ```{r}
-lm_sp <- ship_values %>% 
+system.time({
+    lm_sp <- ship_values %>% 
     select(-SHIPMT_ID) %>% 
     ml_linear_regression(SHIPMT_VALUE ~ .)
+})
 
-dat <- ship %>% 
+system.time({
+    dat <- ship %>% 
     select(contains("SHIPMT")) %>% 
     select(-SHIPMT_ID)
 
 lm_R <- lm(SHIPMT_VALUE ~ ., data = dat)
+})
     
 ```
 ```{r}
@@ -117,7 +151,15 @@ class(lm_R)
 
 
 ```{r}
+cat("\nSpark LM Summary Output\n")
 summary(lm_sp)
+
+cat("\n\nR LM Summary Output\n")
 summary(lm_R)
+```
+
+The Spark machine learning output object has basically all the same values as the equivalent R object
+```{r}
+names(lm_sp)
 ```
 
