@@ -41,8 +41,14 @@ library(sparklyr)
 ```
 
 
+  
+  
+You can connect to spark using the GUI or by calling `spark_connect` and specifying which version of Spark you want to use and whether you want a local or remote master. If you don't specify a version, it will default to *version 1.6.2* (as of March 2017).
 
 
+![](spark_versions.png)
+  
+  
 ```{r Connection}
 sc <- spark_connect(master = "local", version = "2.0.1")
 
@@ -52,7 +58,11 @@ sc <- spark_connect(master = "local", version = "2.0.1")
 # sc <- spark_connect(master = "local", config = config)
 
 sc
+
+# List of RDDs currently in the cluster
 src_tbls(sc)
+
+# Web utility
 spark_web(sc)
 ```
 
@@ -131,7 +141,7 @@ ship_values %>% head
 
 The `sparklyr` API includes interfaces to way more `Spark ML` facilities than the previous API from Spark directly.
 
-![sparklyr_MLLib](spark_MLLib_functionality.png)
+![](spark_MLLib_functionality.png)
 
 
 ### Regression Example
