@@ -1,10 +1,16 @@
 ---
 title: "Cinci Spark Meetup"
 author: "Eugene Pyatigorsky"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: 
-  html_notebook: 
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  html_notebook:
     highlight: tango
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+  html_document:
+    highlight: tango
+    keep_md: yes
     theme: cosmo
     toc: yes
     toc_depth: 2
